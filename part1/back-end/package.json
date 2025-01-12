@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.bundle.js",
     "build": "webpack",
-    "dev": "nodemon ./server.js localhost 3080"
+    "dev": "nodemon ./server.js localhost 3000"
   },
   "repository": {
     "type": "git",
@@ -19,8 +19,11 @@
   },
   "homepage": "https://github.com/bbachi/react-nodejs-example#readme",
   "dependencies": {
+    "@hapi/hapi": "^21.3.12",
+    "@hapi/inert": "^7.1.0",
     "express": "^4.17.1",
-    "http-proxy-middleware": "^1.0.4"
+    "http-proxy-middleware": "^1.0.4",
+    "mysql": "^2.18.1"
   },
   "devDependencies": {
     "del": "^5.1.0",

@@ -17,7 +17,7 @@ export const Users = ({users}) => {
           )
     }
 
-    const userTable = users.map((user,index) => UserRow(user,index))
+    const userTable = (users || []).map((user,index) => UserRow(user,index))
 
     return(
         <div className="container">
