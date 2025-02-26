@@ -1,47 +1,53 @@
 const sql = require('mssql');
 const sqlConfig = require('../sqlConfig')['development'];
+
 const { v4: uuid } = require('uuid');
 
 console.log("sqlConfig: ", sqlConfig);
 
 async function getOnlineAgentByAgentCode(agentcode) {
+
     try {
         console.log("agentcode: ", agentcode);
 
         let pool = await sql.connect(sqlConfig);
 
-        // Use parameterized query to avoid SQL injection
-        let result = await pool.request()
-            .input('agentcode', sql.VarChar(20), agentcode)
-            .query('SELECT * FROM [OnlineAgents] WHERE [agent_code] = @agentcode');
-
+        let result = await pool.request().query(`SELECT * FROM [OnlineAgents] WHERE [agent_code] = '${agentcode}'`); //@agentcode
+       
         console.log("result: ", result);
 
         if (!result || result.recordsets[0].length === 0) {
             console.log("result: ERROR");
-            return {
+            return ({
                 error: true,
                 statusCode: 404,
                 errMessage: 'Agent not found',
-            };
+            });
+
         } else {
-            return {
+
+            return ({
                 error: false,
                 statusCode: 200,
-                data: result.recordset[0],
-            };
+                data: result.recordset[0]
+            });
+
         }
-    } catch (error) {
+
+    }
+    catch (error) {
         console.log(error);
-        return {
-            error: true,
-            statusCode: 500,
-            errMessage: 'An internal server error occurred',
-        };
+        return ({
+             error: true,
+             statusCode: 500,
+             errMessage: 'An internal server error occurred',
+         });
     }
 }
 
+
 async function postOnlineAgentStatus(AgentCode, AgentName, IsLogin, AgentStatus) {
+
     console.log("----------------");
     console.log("AgentCode: " + AgentCode);
     console.log("AgentName: " + AgentName);
@@ -49,73 +55,63 @@ async function postOnlineAgentStatus(AgentCode, AgentName, IsLogin, AgentStatus)
     console.log("AgentStatus: " + AgentStatus);
 
     try {
+
         let pool = await sql.connect(sqlConfig);
-        let request = pool.request();
+        let request = await pool.request();
 
-        const uniqueId = uuid(); // Generate a unique UUID for the agent
+        let agentid = 999; // uuid
+        const uniqueId = uuid(); // agent_id
 
-        // Check if the agent already exists
-        let result = await request
-            .input('AgentCode', sql.VarChar(20), AgentCode)
-            .query('SELECT * FROM [OnlineAgents] WHERE [agent_code] = @AgentCode');
+        console.dir("--------request---------");
+        request.input("agent_id", sql.Int, agentid);
+        request.input("agent_code", sql.VarChar(20), AgentCode);
+        request.input("uuid", sql.VarChar(50), uniqueId);
+        request.input("AgentName", sql.VarChar(20), AgentName);
+        request.input("IsLogin", sql.Char(1), IsLogin);
+        request.input("AgentStatus", sql.Char(1), AgentStatus);
+
+        let result = await pool.request().query(`SELECT * FROM [OnlineAgents] WHERE [agent_code] = '${AgentCode}'`); //@agentcode
 
         if (!result || result.recordsets[0].length === 0) {
-            // Agent does not exist, insert new record
-            let insertQuery = `
-                INSERT INTO [OnlineAgents] (agent_code, uuid, AgentName, IsLogin, AgentStatus)
-                OUTPUT inserted.agent_code, inserted.uuid, inserted.StartOnline
-                VALUES (@AgentCode, @uuid, @AgentName, @IsLogin, @AgentStatus)
-            `;
-
-            let result2 = await request
-                .input('AgentCode', sql.VarChar(20), AgentCode)
-                .input('uuid', sql.VarChar(50), uniqueId)
-                .input('AgentName', sql.VarChar(20), AgentName)
-                .input('IsLogin', sql.Char(1), IsLogin)
-                .input('AgentStatus', sql.Char(1), AgentStatus)
-                .query(insertQuery);
-
+            // Can insert
+            let result2 = await pool.request().query("INSERT INTO [OnlineAgents] (agent_code, agent_id, AgentName, IsLogin, AgentStatus, uuid) OUTPUT inserted.agent_code, inserted.uuid, inserted.StartOnline VALUES ('" + AgentCode + "'," + agentid + ",'" + AgentName + "','" + IsLogin + "','" + AgentStatus + "','" + uniqueId + "');");
             console.dir(result2.recordset[0]);
 
-            return {
+            return ({
                 error: false,
                 statusCode: 200,
                 data: 'Agent was inserted, status has been set also',
-            };
-        } else {
-            // Agent exists, update the record
-            let updateQuery = `
-                UPDATE [OnlineAgents]
-                SET [AgentName] = @AgentName, [IsLogin] = @IsLogin, [AgentStatus] = @AgentStatus
-                WHERE [agent_code] = @AgentCode
-            `;
+            });
 
-            let result2 = await request
-                .input('AgentName', sql.VarChar(20), AgentName)
-                .input('IsLogin', sql.Char(1), IsLogin)
-                .input('AgentStatus', sql.Char(1), AgentStatus)
-                .input('AgentCode', sql.VarChar(20), AgentCode)
-                .query(updateQuery);
-
+        }
+        else {
+            //Can not insert / Update
+            let result2 = await pool.request().query("UPDATE [OnlineAgents] SET [AgentName] = '" + AgentName + "', [IsLogin] = '" + IsLogin + "', [AgentStatus] = '" + AgentStatus + "'  WHERE [agent_code] = '" + AgentCode + "'; ");
             console.dir(result2);
 
-            return {
+            return ({
                 error: false,
                 statusCode: 200,
                 data: 'Agent was updated',
-            };
+            });
+
         }
+
     } catch (error) {
         console.log(error);
-        return {
+        return ({
             error: true,
             statusCode: 500,
             errMessage: 'An internal server error occurred',
-        };
+        });
     }
+
 }
 
+
 module.exports.OnlineAgentRepo = {
-    getOnlineAgentByAgentCode,
-    postOnlineAgentStatus,
-};
+
+    getOnlineAgentByAgentCode: getOnlineAgentByAgentCode,
+    postOnlineAgentStatus, postOnlineAgentStatus
+
+}
