@@ -43,6 +43,7 @@
         "@electron/remote": "^1.2.2",
         "@primer/octicons": "^12.1.0",
         "body-parser": "^1.19.0",
+        "bootstrap": "^5.3.3",
         "easytimer.js": "^4.3.2",
         "feather-icons": "^4.29.0",
         "jquery": "^3.6.3",
