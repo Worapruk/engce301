@@ -17,7 +17,7 @@ var cert_options = {
 var trustProxy = true;
 var dashboard = new ParseDashboard({
   "apps": [{
-    "serverURL": 'https://192.168.56.10:' + apiport + '/api',
+    "serverURL": 'https://172.26.245.153:' + apiport + '/api',
     "appId": 'wallboardapi',
     "masterKey": 'wallboardapi',
     "appName": 'wallboardapi',
